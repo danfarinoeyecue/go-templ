@@ -1,0 +1,23 @@
+html {
+    font-family: 'Roboto', Helvetica, sans-serif;
+    margin: 0.5em 1em;
+}
+
+section {
+    padding: 1em;
+    margin-bottom: 1em;
+    background-color: #f0f0f0;
+}
+
+input[type="text"] {
+    border: 2px solid #999;
+    padding: 0.5em;
+}
+
+#error-message > div {
+    background-color: rgb(255, 231, 231);
+    color: red;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    white-space: pre-wrap;
+}

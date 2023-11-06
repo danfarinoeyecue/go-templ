@@ -1,0 +1,77 @@
+package main
+
+import "fmt"
+
+templ index(viewState string, items []Item) {
+    <html>
+        <head>
+            <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+            <script src="https://unpkg.com/idiomorph/dist/idiomorph-ext.js"></script>
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+            <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+            <link rel="stylesheet" href="/static/style.css"/>
+        </head>
+        <body hx-swap="none" hx-include="#view-state" hx-ext="morph">
+            @renderViewStateAsString(viewState)
+            @renderCounter(0)
+            <section>
+                @renderCreationForm("")
+                @renderItems(items)
+            </section>
+            @renderError("")
+        </body>
+    </html>
+}
+
+templ renderCounter(n int) {
+    <section id="counter" hx-swap-oob="morph">
+        request count (from view state): {fmt.Sprintf("%d", n)}
+        <button hx-post="/api/increment">Increment</button>
+    </section>
+}
+
+templ renderError(message string) {
+    <div id="error-section" hx-swap-oob="morph">
+        <button hx-post="/api/error">Trigger error</button>
+        <div id="error-message">
+            if message != "" {
+                <div>{message}</div>
+            }
+        </div>
+    </div>
+}
+
+templ renderCreationForm(message string) {
+    <div id="create-form" hx-swap-oob="morph">
+        <form hx-post="/api/create">
+            Create a new thing:
+            <input type="text" name="id" autofocus placeholder="ID"/>
+            <input type="text" name="message" placeholder="message" value={message}/>
+            <button type="submit">Create</button>
+        </form>
+    </div>
+}
+
+templ renderItems(items []Item) {
+    <div id="items" hx-swap-oob="morph">
+        <hr/>
+        for _, item := range items {
+            @renderItem(item)
+        }
+    </div>
+}
+
+templ renderItem(item Item) {
+    <div id={"item-"+item.ID}>
+        {item.ID} &rarr; {item.Message}
+        <form hx-post="/api/delete" hx-confirm={"Delete " + item.ID + "?"} style="display: inline">
+            <input type="hidden" name="id" value={item.ID}/>
+            <button>Delete</button>
+        </form>
+    </div>
+}
+
+templ renderViewStateAsString(state string) {
+    <input id="view-state" type="hidden" hx-swap-oob="true" name={viewStateKey} value={state}/>
+}

@@ -51,6 +51,31 @@ func run() error {
 	e := echo.New()
 	e.HideBanner = true
 
+	e.Use(middleware.RequestID())
+
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		Skipper:        nil,
+		BeforeNextFunc: nil,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			slog.InfoContext(c.Request().Context(),
+				"echo request complete",
+				slog.String("request_id", v.RequestID),
+				slog.Int("status", v.Status),
+				slog.String("method", v.Method),
+				slog.String("url", v.URI),
+				slog.Duration("latency", v.Latency),
+				slog.Any("error", v.Error),
+			)
+			return nil
+		},
+		LogLatency:   true,
+		LogMethod:    true,
+		LogURI:       true,
+		LogRequestID: true,
+		LogStatus:    true,
+		LogError:     true,
+	}))
+
 	e.Pre(middleware.Gzip())
 
 	e.Pre(middleware.StaticWithConfig(middleware.StaticConfig{

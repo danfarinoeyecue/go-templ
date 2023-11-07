@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
 	"embed"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -155,45 +152,6 @@ func htmlContentTypeMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-type ViewState struct {
-	RequestCount int
-}
-
-const viewStateKey = "__view_state"
-
-func getViewState(c echo.Context) *ViewState {
-	if vs, ok := c.Get(viewStateKey).(*ViewState); ok {
-		return vs
-	}
-
-	vs := &ViewState{}
-	c.Set(viewStateKey, vs)
-
-	jsonStr := c.FormValue(viewStateKey)
-	if jsonStr == "" {
-		return vs
-	}
-
-	err := json.Unmarshal([]byte(jsonStr), vs)
-	if err != nil {
-		slog.Warn("invalid view state JSON", "error", err)
-		return vs
-	}
-
-	return vs
-}
-
-func renderViewState(viewState *ViewState) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		jsonBytes, err := json.Marshal(viewState)
-		if err != nil {
-			return err
-		}
-
-		return renderViewStateAsString(string(jsonBytes)).Render(ctx, w)
-	})
-}
-
 func templErrorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := next(c)
@@ -204,31 +162,12 @@ func templErrorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func viewStateMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		vs := getViewState(c)
-		vs.RequestCount++
-
-		err := respondTempl(c, renderCounter(vs.RequestCount))
-		if err != nil {
-			return err
-		}
-
-		handlerErr := next(c)
-
-		err = respondTempl(c, renderViewState(vs))
-		if err != nil {
-			return err
-		}
-
-		return handlerErr
-	}
-}
-
 func respondTempl(c echo.Context, cos ...templ.Component) error {
 	for _, co := range cos {
 		err := co.Render(c.Request().Context(), c.Response())
 		if err != nil {
+			// note: the only reason Render can fail is when writing to the HTTP response writer, which means all
+			// bets are off for this request. No need to run further templs, or worry about HTTP status code.
 			return err
 		}
 	}

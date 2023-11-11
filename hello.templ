@@ -7,6 +7,7 @@ templ index(viewState string, items []Item) {
         <head>
             <script src="https://unpkg.com/htmx.org@1.9.6"></script>
             <script src="https://unpkg.com/idiomorph/dist/idiomorph-ext.js"></script>
+            <script src="https://unpkg.com/alpinejs"></script>
             <link rel="preconnect" href="https://fonts.googleapis.com"/>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
             <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
@@ -44,7 +45,7 @@ templ renderError(message string) {
 
 templ renderCreationForm(message string) {
     <div id="create-form" hx-swap-oob="morph">
-        <form hx-post="/api/create">
+        <form hx-post="/api/save-item">
             Create a new thing:
             <input type="text" name="id" autofocus placeholder="ID"/>
             <input type="text" name="message" placeholder="message" value={message}/>
@@ -63,12 +64,24 @@ templ renderItems(items []Item) {
 }
 
 templ renderItem(item Item) {
-    <div id={"item-"+item.ID}>
-        {item.ID} &rarr; {item.Message}
-        <form hx-post="/api/delete" hx-confirm={"Delete " + item.ID + "?"} style="display: inline">
-            <input type="hidden" name="id" value={item.ID}/>
-            <button>Delete</button>
-        </form>
+    <div id={"item-"+item.ID} x-data="{edit:false}">
+        <div x-show="!edit">
+            {item.ID} &rarr; {item.Message}
+            <form hx-post="/api/delete" hx-confirm={"Delete " + item.ID + "?"} style="display: inline">
+                <input type="hidden" name="id" value={item.ID}/>
+                <button>Delete</button>
+            </form>
+            <button x-on:click="edit = true">Edit</button>
+        </div>
+        <div x-show="edit">
+            <form hx-post="/api/save-item" style="display: inline">
+                {item.ID} &rarr;
+                <input type="text" name="message" value={item.Message}/>
+                <input type="hidden" name="id" value={item.ID}/>
+                <button type="submit">Save</button>
+            </form>
+            <button x-on:click="edit = false">Cancel</button>
+        </div>
     </div>
 }
 

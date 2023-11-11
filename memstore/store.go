@@ -2,7 +2,6 @@ package memstore
 
 import (
 	"cmp"
-	"errors"
 	"slices"
 )
 
@@ -20,14 +19,8 @@ func New[T Ider]() *Store[T] {
 	}
 }
 
-var ErrDuplicate = errors.New("duplicate ID")
-
-func (s *Store[T]) Create(item T) error {
-	id := item.GetID()
-	if _, ok := s.items[id]; ok {
-		return ErrDuplicate
-	}
-	s.items[id] = item
+func (s *Store[T]) Save(item T) error {
+	s.items[item.GetID()] = item
 	return nil
 }
 

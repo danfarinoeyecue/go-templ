@@ -39,9 +39,13 @@ func (i Item) GetID() string {
 
 func run() error {
 	store := memstore.New[Item]()
-	_ = store.Create(Item{
+	_ = store.Save(Item{
 		ID:      "1",
 		Message: "foo",
+	})
+	_ = store.Save(Item{
+		ID:      "2",
+		Message: "bar",
 	})
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
@@ -98,7 +102,7 @@ func run() error {
 		return fmt.Errorf("oops from request %d", vs.RequestCount)
 	})
 
-	apiGroup.POST("/create", func(c echo.Context) error {
+	apiGroup.POST("/save-item", func(c echo.Context) error {
 		var item Item
 		err := c.Bind(&item)
 		if err != nil {
@@ -110,7 +114,7 @@ func run() error {
 			return err
 		}
 
-		err = store.Create(item)
+		err = store.Save(item)
 		if err != nil {
 			return err
 		}

@@ -47,6 +47,10 @@ func run() error {
 		ID:      "2",
 		Message: "bar",
 	})
+	_ = store.Save(Item{
+		ID:      "3",
+		Message: "abc",
+	})
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	e := echo.New()

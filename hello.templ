@@ -2,18 +2,20 @@ package main
 
 import "fmt"
 
-templ index(viewState string, items []Item) {
+templ index(viewState string, items []Item, scripts []string) {
     <html>
         <head>
-            <script src="https://unpkg.com/htmx.org@1.9.6"></script>
-            <script src="https://unpkg.com/idiomorph/dist/idiomorph-ext.js"></script>
-            <script src="https://unpkg.com/alpinejs"></script>
             <link rel="preconnect" href="https://fonts.googleapis.com"/>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
             <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
             <link rel="stylesheet" href="/static/style.css"/>
         </head>
-        <body hx-swap="none" hx-include="#view-state" hx-ext="morph">
+        <body hx-swap="none" hx-include="#view-state" hx-ext="alpine-morph">
+            <script src="https://cdn.jsdelivr.net/npm/@alpinejs/morph@3.x.x/dist/cdn.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.js"></script>
+            <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+            <script src="https://unpkg.com/htmx.org/dist/ext/alpine-morph.js"></script>
+
             @renderViewStateAsString(viewState)
             @renderCounter(0)
             <section>
@@ -21,6 +23,7 @@ templ index(viewState string, items []Item) {
                 @renderItems(items)
             </section>
             @renderError("")
+            @renderEphemeralScripts(scripts)
         </body>
     </html>
 }
@@ -46,7 +49,7 @@ templ renderError(message string) {
 templ renderCreationForm(message string) {
     <div id="create-form" hx-swap-oob="morph">
         <form hx-post="/api/save-item">
-            Create a new thing:
+            Create/edit a new thing:
             <input type="text" name="id" autofocus placeholder="ID"/>
             <input type="text" name="message" placeholder="message" value={message}/>
             <button type="submit">Create</button>
@@ -74,7 +77,7 @@ templ renderItem(item Item) {
             <button x-on:click="edit = true">Edit</button>
         </div>
         <div x-show="edit">
-            <form hx-post="/api/save-item" style="display: inline">
+            <form hx-post="/api/save-item" style="display: inline" x-init="console.log('hey')">
                 {item.ID} &rarr;
                 <input type="text" name="message" value={item.Message}/>
                 <input type="hidden" name="id" value={item.ID}/>
@@ -87,4 +90,10 @@ templ renderItem(item Item) {
 
 templ renderViewStateAsString(state string) {
     <input id="view-state" type="hidden" hx-swap-oob="true" name={viewStateKey} value={state}/>
+}
+
+templ renderEphemeralScripts(scripts []string) {
+    for _, script := range scripts {
+        <script>
+    }
 }
